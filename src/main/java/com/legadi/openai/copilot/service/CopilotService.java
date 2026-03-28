@@ -1,13 +1,18 @@
 package com.legadi.openai.copilot.service;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Service
 public class CopilotService {
@@ -21,20 +26,34 @@ public class CopilotService {
         this.copilotRestClient = copilotRestClient;
     }
 
-    public Map<String, Object> chatCompletion(Map<String, Object> request) {
-        return copilotRestClient.post()
-            .uri(COPILOT_COMPLETIONS_ENDPOINT)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(request)
-            .retrieve()
-            .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+    public ChatResponse chatCompletion(Map<String, Object> request) {
+        AtomicReference<HttpHeaders> headers = new AtomicReference<>();
+        StreamingResponseBody response = out -> {
+            copilotRestClient.post()
+                .uri(COPILOT_COMPLETIONS_ENDPOINT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange((req, res) -> {
+                    headers.set(res.getHeaders());
+                    res.getBody().transferTo(out);
+                    out.flush();
+                    return null;
+                });
+        };
+        return new ChatResponse(response, headers.get());
     }
 
     @Cacheable("models")
-    public List<Map<String, Object>> getModels() {
-        return copilotRestClient.get()
+    public ListResponse getModels() {
+        ResponseEntity<List<Map<String, Object>>> response = copilotRestClient.get()
             .uri(COPILOT_MODELS_ENDPOINT)
             .retrieve()
-            .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            .toEntity(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+        return new ListResponse(response.getBody(), response.getHeaders());
     }
+
+    public record ListResponse(List<Map<String, Object>> body, HttpHeaders headers)
+        implements Serializable { }
+
+    public record ChatResponse(StreamingResponseBody body, HttpHeaders headers) { }
 }
