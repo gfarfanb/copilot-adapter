@@ -1,4 +1,4 @@
-package com.legadi.openai.copilot.config;
+package com.legadi.openai.copilot.config.props;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

@@ -17,15 +17,14 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-ENV SERVER_PORT=8080
+ENV SERVER_PORT=8181
 
 EXPOSE $SERVER_PORT
 
 LABEL maintainer="gfarfanb" \
       version="1.0.0" \
-      description="GitHub Copilot adapter for OpenAI API compatibility"
-
-LABEL org.opencontainers.image.title="copilot-adapter" \
+      description="GitHub Copilot adapter for OpenAI API compatibility" \
+      org.opencontainers.image.title="copilot-adapter" \
       org.opencontainers.image.description="GitHub Copilot adapter for OpenAI API compatibility" \
       org.opencontainers.image.version="1.0.0" \
       org.opencontainers.image.authors="Giovanni Farfán B." \

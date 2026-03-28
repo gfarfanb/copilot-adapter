@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.legadi.openai.copilot.dto.ErrorResponse;
 import com.legadi.openai.copilot.service.CopilotService;
-import com.legadi.openai.copilot.service.CopilotService.ChatResponse;
-import com.legadi.openai.copilot.service.CopilotService.ListResponse;
+
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/v1")
@@ -30,28 +29,20 @@ public class OpenAIV1Controller {
         this.copilotService = copilotService;
     }
 
-    @PostMapping(value = "/chat/completions", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<StreamingResponseBody> chatCompletions(@RequestBody Map<String, Object> request) {
-        ChatResponse response = copilotService.chatCompletion(request);
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .headers(response.headers())
-            .body(response.body());
+    @PostMapping(value = "/chat/completions", produces = { MediaType.TEXT_EVENT_STREAM_VALUE })
+    public ResponseEntity<Flux<String>> chatCompletions(@RequestBody Map<String, Object> request) {
+        return ResponseEntity.ok(copilotService.chatCompletion(request));
     }
 
     @GetMapping("/models")
     public ResponseEntity<List<Map<String, Object>>> getModels() {
-        ListResponse response = copilotService.getModels();
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .headers(response.headers())
-            .body(response.body());
+        return ResponseEntity.ok(copilotService.getModels());
     }
 
     @GetMapping("/model")
     public ResponseEntity<Object> getModel(@RequestParam String id) {
-        ListResponse response = copilotService.getModels();
-        Optional<Map<String, Object>> foundModel = response.body().stream()
+        List<Map<String, Object>> response = copilotService.getModels();
+        Optional<Map<String, Object>> foundModel = response.stream()
             .filter(m -> m.get("id").equals(id))
             .findFirst();
 

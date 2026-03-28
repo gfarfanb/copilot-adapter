@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.reactive.function.client.WebClientException;
 
 import com.legadi.openai.copilot.dto.ErrorResponse;
 
@@ -15,10 +15,10 @@ public class GlobalExceptionHandler {
 
     private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(RestClientResponseException.class)
-    public ResponseEntity<ErrorResponse> handleRestClientResponseException(RestClientResponseException ex) {
-        logger.error("Error getting REST client response", ex);
-        return ResponseEntity.status(ex.getStatusCode())
+    @ExceptionHandler(WebClientException.class)
+    public ResponseEntity<ErrorResponse> handleRestClientResponseException(WebClientException ex) {
+        logger.error("Error getting Web client response", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse.builder()
                 .error(ErrorResponse.Error.builder()
                     .message(ex.getMessage())

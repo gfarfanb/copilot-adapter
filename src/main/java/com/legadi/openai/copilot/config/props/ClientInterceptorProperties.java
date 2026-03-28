@@ -1,4 +1,4 @@
-package com.legadi.openai.copilot.config;
+package com.legadi.openai.copilot.config.props;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Configuration
 @ConfigurationProperties(prefix = "rest.client.request.interceptor")
 @Getter @Setter
-public class RestClientInterceptorProperties {
+public class ClientInterceptorProperties {
 
-    private List<String> skipHeaders;
+    private List<String> hiddenHeaders;
 }

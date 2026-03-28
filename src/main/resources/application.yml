@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:8181}
 
 spring:
   application:
@@ -17,9 +17,13 @@ rest:
   client:
     request:
       interceptor:
-        skip-headers: authorization,content-security-policy,set-cookie
+        hidden-headers: authorization,content-security-policy,set-cookie
+  service:
+    request:
+      hidden-headers: authorization
 
 logging:
   level:
     com.legadi.openai.copilot: DEBUG
-    org.springframework.: INFO
+    org.springframework.web.filter: DEBUG
+    org.springframework: INFO
