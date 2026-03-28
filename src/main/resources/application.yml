@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: copilot-adapter
+  cache:
+    redis:
+      time-to-live: 60m
+
+copilot:
+  token: ${GITHUB_COPILOT_TOKEN}
+  api-url: ${COPILOT_API_URL:https://models.github.ai}
+  version: ${COPILOT_API_VERSION:2026-03-10}
+
+rest:
+  client:
+    request:
+      interceptor:
+        skip-headers: authorization,content-security-policy,set-cookie
+
+logging:
+  level:
+    com.legadi.openai.copilot: DEBUG
+    org.springframework.: INFO
