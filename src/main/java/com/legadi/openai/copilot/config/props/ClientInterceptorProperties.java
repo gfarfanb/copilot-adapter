@@ -14,4 +14,5 @@ import lombok.Setter;
 public class ClientInterceptorProperties {
 
     private List<String> hiddenHeaders;
+    private String prefix;
 }

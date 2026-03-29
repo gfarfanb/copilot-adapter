@@ -3,8 +3,6 @@ package com.legadi.openai.copilot.service;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -12,14 +10,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class CopilotService {
 
     private static final String COPILOT_COMPLETIONS_ENDPOINT = "/inference/chat/completions";
+    private static final String COPILOT_EMBEDDINGS_ENDPOINT = "/inference/embeddings";
     private static final String COPILOT_MODELS_ENDPOINT = "/catalog/models";
-
-    private final Logger logger = LoggerFactory.getLogger(CopilotService.class);
 
     private final WebClient copilotWebClient;
     private final ExchangePrinterService printerService;
@@ -36,23 +34,52 @@ public class CopilotService {
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(request)
             .exchangeToFlux(res -> {
-                printerService.printJsonRequest(res.request(), request);
-                printerService.printStartLineAndHeaders(res);
-                return res.bodyToFlux(String.class);
+                if (res.statusCode().is2xxSuccessful()) {
+                    printerService.printClientResponseAndJsonBody(res, request);
+                    return res.bodyToFlux(String.class);
+                } else {
+                    return Flux.error(res.createException().block());
+                }
             });
-        response.subscribe(logger::info);
+
+        response.subscribe(printerService::printPlainResponse);
         return response;
     }
 
     @Cacheable("models")
     public List<Map<String, Object>> getModels() {
-        return copilotWebClient.get()
+        var listTypeReference = new ParameterizedTypeReference<List<Map<String, Object>>>() {};
+        Mono<List<Map<String, Object>>> response = copilotWebClient.get()
             .uri(COPILOT_MODELS_ENDPOINT)
             .exchangeToMono(res -> {
-                printerService.printRequest(res.request());
-                printerService.printStartLineAndHeaders(res);
-                return res.bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
-            })
-            .block();
+                if (res.statusCode().is2xxSuccessful()) {
+                    printerService.printClientResponse(res);
+                    return res.bodyToMono(listTypeReference);
+                } else {
+                    return res.createError();
+                }
+            });
+
+        response.subscribe(printerService::printJsonResponse);
+        return response.block();
+    }
+
+    public Map<String, Object> embeddings(Map<String, Object> request) {
+        var objectTypeReference = new ParameterizedTypeReference<Map<String, Object>>() {};
+
+        Mono<Map<String, Object>> response = copilotWebClient.post()
+            .uri(COPILOT_EMBEDDINGS_ENDPOINT)
+            .bodyValue(request)
+            .exchangeToMono(res -> {
+                if (res.statusCode().is2xxSuccessful()) {
+                    printerService.printClientResponseAndJsonBody(res, request);
+                    return res.bodyToMono(objectTypeReference);
+                } else {
+                    return res.createError();
+                }
+            });
+
+        response.subscribe(printerService::printJsonResponse);
+        return response.block();
     }
 }

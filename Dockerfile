@@ -1,5 +1,6 @@
-# Stage 1: Build the application with Maven
+
 FROM eclipse-temurin:21-jdk-alpine AS build
+RUN echo "Stage 1: Build the application with Maven"
 
 WORKDIR /app
 
@@ -10,8 +11,11 @@ RUN apk add --no-cache maven && \
     mvn clean package -DskipTests
 
 
-# Stage 2: Run the application with a lightweight JRE
 FROM eclipse-temurin:21-jre-alpine
+
+ARG DOCKER_TAG
+
+RUN echo "Stage 2: Run the application with a lightweight JRE, version: $DOCKER_TAG"
 
 WORKDIR /app
 
@@ -21,13 +25,11 @@ ENV SERVER_PORT=8181
 
 EXPOSE $SERVER_PORT
 
-LABEL maintainer="gfarfanb" \
-      version="1.0.0" \
-      description="GitHub Copilot adapter for OpenAI API compatibility" \
-      org.opencontainers.image.title="copilot-adapter" \
-      org.opencontainers.image.description="GitHub Copilot adapter for OpenAI API compatibility" \
-      org.opencontainers.image.version="1.0.0" \
+LABEL org.opencontainers.image.title="copilot-adapter" \
+      org.opencontainers.image.description="GitHub Copilot REST Models API adapter for OpenAI API compatibility" \
+      org.opencontainers.image.version="$DOCKER_TAG" \
       org.opencontainers.image.authors="Giovanni Farfán B." \
-      org.opencontainers.image.source="https://github.com/gfarfanb/copilot-adapter"
+      org.opencontainers.image.source="https://github.com/gfarfanb/copilot-adapter" \
+      org.opencontainers.image.licenses="MIT"
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
