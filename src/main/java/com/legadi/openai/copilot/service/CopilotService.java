@@ -38,7 +38,7 @@ public class CopilotService {
                     printerService.printClientResponseAndJsonBody(res, request);
                     return res.bodyToFlux(String.class);
                 } else {
-                    return Flux.error(res.createException().block());
+                    return Flux.from(res.createError());
                 }
             });
 
