@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Service
 public class CopilotService {
@@ -29,7 +28,7 @@ public class CopilotService {
     }
 
     public Flux<String> chatCompletion(Map<String, Object> request) {
-        Flux<String> response = copilotWebClient.post()
+        return copilotWebClient.post()
             .uri(COPILOT_COMPLETIONS_ENDPOINT)
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(request)
@@ -40,16 +39,14 @@ public class CopilotService {
                 } else {
                     return Flux.from(res.createError());
                 }
-            });
-
-        response.subscribe(printerService::printPlainResponse);
-        return response;
+            })
+            .doOnNext(printerService::printPlainResponse);
     }
 
     @Cacheable("models")
     public List<Map<String, Object>> getModels() {
         var listTypeReference = new ParameterizedTypeReference<List<Map<String, Object>>>() {};
-        Mono<List<Map<String, Object>>> response = copilotWebClient.get()
+        return copilotWebClient.get()
             .uri(COPILOT_MODELS_ENDPOINT)
             .exchangeToMono(res -> {
                 if (res.statusCode().is2xxSuccessful()) {
@@ -58,16 +55,14 @@ public class CopilotService {
                 } else {
                     return res.createError();
                 }
-            });
-
-        response.subscribe(printerService::printJsonResponse);
-        return response.block();
+            })
+            .doOnNext(printerService::printJsonResponse)
+            .block();
     }
 
     public Map<String, Object> embeddings(Map<String, Object> request) {
         var objectTypeReference = new ParameterizedTypeReference<Map<String, Object>>() {};
-
-        Mono<Map<String, Object>> response = copilotWebClient.post()
+        return copilotWebClient.post()
             .uri(COPILOT_EMBEDDINGS_ENDPOINT)
             .bodyValue(request)
             .exchangeToMono(res -> {
@@ -77,9 +72,8 @@ public class CopilotService {
                 } else {
                     return res.createError();
                 }
-            });
-
-        response.subscribe(printerService::printJsonResponse);
-        return response.block();
+            })
+            .doOnNext(printerService::printJsonResponse)
+            .block();
     }
 }
