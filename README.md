@@ -9,9 +9,6 @@ GitHub Copilot [REST Models API](https://docs.github.com/en/rest/models) adapter
 |Variable|Default|
 |---|---|
 |SERVER_PORT|8181|
-|REDIS_HOST|localhost|
-|REDIS_PORT|6379|
-|REDIS_DATABASE|0|
 |COPILOT_API_URL|https://models.github.ai|
 |COPILOT_API_VERSION|2026-03-10|
 
@@ -63,20 +60,9 @@ services:
     container_name: copilot-adapter
     environment:
       - SERVER_PORT=${COPILOT_ADAPTER_PORT} # Optional
-      - REDIS_HOST=${REDIS_HOST} # Optional
-      - REDIS_PORT=${REDIS_PORT} # Optional
-      - REDIS_DATABASE=${REDIS_DATABASE} # Optional
       - GITHUB_COPILOT_TOKEN=${COPILOT_ADAPTER_GITHUB_TOKEN}
       - COPILOT_API_URL=${COPILOT_ADAPTER_API_URL} # Optional
       - COPILOT_API_VERSION=${COPILOT_ADAPTER_API_VERSION} # Optional
-    network_mode: host
-    restart: unless-stopped
-    depends_on:
-      - redis
-
-  redis:
-    image: redis:8.6.2-alpine
-    container_name: redis
     network_mode: host
     restart: unless-stopped
 ```

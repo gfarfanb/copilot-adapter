@@ -4,14 +4,10 @@ server:
 spring:
   application:
     name: copilot-adapter
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    database: ${REDIS_DATABASE:0}
-    timeout: 5000ms
   cache:
-    redis:
-      time-to-live: 60m
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=60m
 
 copilot:
   token: ${GITHUB_COPILOT_TOKEN}
